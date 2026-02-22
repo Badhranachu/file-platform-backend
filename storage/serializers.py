@@ -18,6 +18,7 @@ class FolderSerializer(serializers.ModelSerializer):
         required=False,
         allow_blank=True
     )
+    owner_id = serializers.IntegerField(source="owner.id", read_only=True)
 
     subfolder_count = serializers.SerializerMethodField()
     file_count = serializers.SerializerMethodField()
@@ -29,10 +30,12 @@ class FolderSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "owner_username",
+            "owner_id",
             "owner_profile_photo",
             "subfolder_count",
             "file_count",
             "is_public",
+            "is_listed_in_feed",
             "created_at",
             "parent",
             "password",  # 🔥 MUST INCLUDE THIS
@@ -51,8 +54,11 @@ class FolderSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)
 
-        if password:
-            instance.password = make_password(password)
+        if password is not None:
+            if password == "":
+                instance.password = None  # remove password if empty
+            else:
+                instance.password = make_password(password)
 
         return super().update(instance, validated_data)
 
@@ -77,11 +83,13 @@ class FolderSerializer(serializers.ModelSerializer):
         return total
 
 class FileSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = File
         fields = "__all__"
+        read_only_fields = ["owner", "uploaded_at"]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data["file"] = instance.file.url  # return relative path only
+        data["file"] = instance.file.url
         return data

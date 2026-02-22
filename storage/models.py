@@ -20,7 +20,7 @@ class Folder(models.Model):
         related_name="subfolders"
     )
     is_public = models.BooleanField(default=True)
-    is_listed_in_feed = models.BooleanField(default=False)
+    is_listed_in_feed = models.BooleanField(default=True)
     password = models.CharField(max_length=255, blank=True, null=True)  # 🔥 NEW
     created_at = models.DateTimeField(auto_now_add=True)
 
